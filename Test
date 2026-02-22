@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fiche Outils → TLS</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap');
+:root{
+  --bg:#0a0a0f;--sur:#111118;--s2:#1a1a24;--bor:#2a2a3a;
+  --ac:#00e5ff;--ac2:#7c3aed;--ok:#00ff88;--wa:#ffaa00;
+  --er:#ff3366;--tx:#e8e8f0;--mu:#6b6b8a;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--tx);font-family:'Syne',sans-serif;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,229,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;}
+.w{max-width:900px;margin:0 auto;padding:18px 14px 60px;position:relative;}
+.hdr{display:flex;align-items:center;gap:12px;padding-bottom:16px;border-bottom:1px solid var(--bor);margin-bottom:20px;}
+.hico{width:40px;height:40px;background:linear-gradient(135deg,var(--ac),var(--ac2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.htx h1{font-size:17px;font-weight:800;}
+.htx h1 span{color:var(--ac);}
+.htx p{font-size:10px;color:var(--mu);font-family:'JetBrains Mono',monospace;}
+.hbadge{margin-left:auto;background:rgba(0,229,255,0.1);border:1px solid rgba(0,229,255,0.3);color:var(--ac);font-size:10px;font-family:'JetBrains Mono',monospace;padding:3px 8px;border-radius:20px;}
+.uploads{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.uc{background:var(--sur);border:2px dashed var(--bor);border-radius:13px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;}
+.uc:hover,.uc.drag{border-color:var(--ac);background:rgba(0,229,255,0.04);}
+.uc.done{border-color:var(--ok);border-style:solid;}
+.uc input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;z-index:2;}
+.uci{padding:18px 12px;text-align:center;pointer-events:none;}
+.uci .ico{font-size:26px;margin-bottom:6px;}
+.uci .ttl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;}
+.uci .sub{font-size:10px;color:var(--mu);font-family:'JetBrains Mono',monospace;line-height:1.4;}
+.ubadge{display:none;margin-top:7px;background:rgba(0,255,136,0.15);border:1px solid rgba(0,255,136,0.35);color:var(--ok);font-size:10px;font-family:'JetBrains Mono',monospace;padding:2px 8px;border-radius:20px;}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.btn{width:100%;padding:12px;border-radius:10px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:7px;}
+.bgen{background:linear-gradient(135deg,var(--ac2),var(--ac));color:#fff;}
+.bgen:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,229,255,0.25);}
+.bgen:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+.bdl{background:rgba(0,255,136,0.12);border:1px solid rgba(0,255,136,0.35);color:var(--ok);}
+.bdl:hover:not(:disabled){background:rgba(0,255,136,0.22);}
+.bdl:disabled{opacity:0.4;cursor:not-allowed;}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;}
+.stat{background:var(--sur);border:1px solid var(--bor);border-radius:9px;padding:10px 6px;text-align:center;}
+.sn{font-size:20px;font-weight:800;font-family:'JetBrains Mono',monospace;line-height:1;}
+.sl{font-size:9px;color:var(--mu);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
+.pw{height:3px;background:var(--bor);border-radius:2px;margin-bottom:12px;overflow:hidden;}
+.pb{height:100%;background:linear-gradient(90deg,var(--ac2),var(--ac));width:0%;transition:width 0.3s;border-radius:2px;}
+.panel{background:var(--sur);border:1px solid var(--bor);border-radius:13px;overflow:hidden;margin-bottom:12px;}
+.ph{padding:11px 14px;background:var(--s2);border-bottom:1px solid var(--bor);display:flex;align-items:center;gap:8px;}
+.ph h3{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;}
+.ph .cnt{margin-left:auto;background:var(--sur);border:1px solid var(--bor);font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--mu);padding:1px 7px;border-radius:9px;}
+.pbd{padding:10px;max-height:260px;overflow-y:auto;}
+.pbd::-webkit-scrollbar{width:3px;}
+.pbd::-webkit-scrollbar-thumb{background:var(--bor);}
+.tc{background:var(--s2);border:1px solid var(--bor);border-radius:8px;padding:9px 11px;margin-bottom:6px;display:flex;align-items:flex-start;gap:9px;transition:all 0.2s;}
+.tc.ok{border-color:rgba(0,255,136,0.4);background:rgba(0,255,136,0.03);}
+.tc.er{border-color:rgba(255,51,102,0.4);}
+.tnum{background:var(--s2);border:1px solid var(--bor);color:var(--mu);font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;padding:2px 6px;border-radius:5px;flex-shrink:0;min-width:40px;text-align:center;}
+.ti{flex:1;min-width:0;}
+.tref{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--ac);margin-bottom:2px;}
+.tmatch{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ok);margin-top:2px;}
+.tmatch .dim{color:var(--mu);font-size:9px;}
+.tdesc{font-size:10px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}
+.tdims{font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--mu);margin-top:2px;}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px;}
+.dot.ok{background:var(--ok);box-shadow:0 0 6px var(--ok);}
+.dot.er{background:var(--er);}
+.dot.p{background:var(--mu);}
+/* DB list */
+.dbi{background:var(--s2);border:1px solid var(--bor);border-radius:7px;padding:6px 10px;margin-bottom:4px;display:flex;align-items:center;gap:7px;}
+.dbi-id{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--ac2);flex-shrink:0;}
+.dbi-info{flex:1;min-width:0;}
+.dbi-ref{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--mu);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.dbi-src{font-size:9px;color:var(--mu);opacity:0.5;font-family:'JetBrains Mono',monospace;flex-shrink:0;}
+.lb{padding:9px 12px;max-height:180px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:10px;line-height:1.7;}
+.lb::-webkit-scrollbar{width:3px;}
+.lb::-webkit-scrollbar-thumb{background:var(--bor);}
+.ll{display:flex;gap:8px;}
+.lt{color:var(--mu);flex-shrink:0;}
+.li{color:var(--ac);}
+.lo{color:var(--ok);}
+.le{color:var(--er);}
+.lw{color:var(--wa);}
+.dbg-btn{width:100%;background:var(--s2);border:1px solid var(--bor);border-radius:10px;padding:9px 14px;color:var(--mu);font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;text-align:left;display:flex;justify-content:space-between;margin-bottom:4px;}
+.dbg-body{background:var(--sur);border:1px solid var(--bor);border-radius:10px;padding:10px 12px;max-height:220px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--mu);white-space:pre-wrap;word-break:break-all;display:none;}
+.dbg-body.open{display:block;}
+.empty{text-align:center;padding:22px;color:var(--mu);font-size:11px;}
+.empty span{font-size:22px;display:block;margin-bottom:5px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.spin{width:12px;height:12px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.6s linear infinite;display:inline-block;}
+</style>
+</head>
+<body>
+<div class="w">
+<div class="hdr">
+  <div class="hico">⚙️</div>
+  <div class="htx"><h1>Fiche Outils <span>→ TLS</span></h1><p>FGAT · Vericut Tool Library Converter</p></div>
+  <div class="hbadge">VERICUT 9.4</div>
+</div>
+
+<div class="uploads">
+  <div class="uc" id="dbC" ondragover="ev(event,'dbC')" ondragleave="rv('dbC')" ondrop="dp(event,'db')">
+    <input type="file" accept=".tls" multiple onchange="loadDB(this.files)">
+    <div class="uci"><div class="ico">🗄️</div><div class="ttl">Base TLS</div><div class="sub">Plusieurs .tls<br>acceptés</div><div class="ubadge" id="dbBadge"></div></div>
+  </div>
+  <div class="uc" id="pdfC" ondragover="ev(event,'pdfC')" ondragleave="rv('pdfC')" ondrop="dp(event,'pdf')">
+    <input type="file" accept=".pdf" onchange="loadPDF(this.files[0])">
+    <div class="uci"><div class="ico">📄</div><div class="ttl">Fiche PDF</div><div class="sub">FORM-269/A<br>1 fichier PDF</div><div class="ubadge" id="pdfBadge"></div></div>
+  </div>
+</div>
+
+<div class="btns">
+  <button class="btn bgen" id="genBtn" onclick="generate()" disabled><span>⚡</span> Générer TLS</button>
+  <button class="btn bdl"  id="dlBtn"  onclick="dlTLS()"   disabled>⬇️ Télécharger .tls</button>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="sn" id="sT" style="color:var(--ac)">0</div><div class="sl">PDF Outils</div></div>
+  <div class="stat"><div class="sn" id="sM" style="color:var(--ok)">0</div><div class="sl">Trouvés</div></div>
+  <div class="stat"><div class="sn" id="sX" style="color:var(--er)">0</div><div class="sl">Manquants</div></div>
+  <div class="stat"><div class="sn" id="sD" style="color:var(--mu)">0</div><div class="sl">DB Tools</div></div>
+</div>
+
+<div class="pw"><div class="pb" id="prog"></div></div>
+
+<div class="panel">
+  <div class="ph"><span>📋</span><h3>Outils PDF</h3><div class="cnt" id="pdfCnt">0</div></div>
+  <div class="pbd" id="pdfList"><div class="empty"><span>📄</span>Chargez un PDF</div></div>
+</div>
+
+<div class="panel">
+  <div class="ph"><span>🗄️</span><h3>Base de données TLS</h3><div class="cnt" id="dbCnt">0</div></div>
+  <div class="pbd" id="dbList"><div class="empty"><span>🗄️</span>Chargez vos TLS</div></div>
+</div>
+
+<div class="panel">
+  <div class="ph"><span>📟</span><h3>Log</h3></div>
+  <div class="lb" id="logEl"><div class="ll"><span class="lt">--:--:--</span><span class="li">Système prêt.</span></div></div>
+</div>
+
+<button class="dbg-btn" onclick="toggleDbg()">🔍 Debug — Texte brut PDF <span id="dbgA">▼</span></button>
+<div class="dbg-body" id="dbgBody">Chargez un PDF...</div>
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+// DB indexé par Tool ID normalisé (ex: "2CC4-D00-032")
+// Dans le TLS NMVTUN, Tool ID = code ref (ex: ID="2CC4-D00-032")
+let DB = {};          // key(toolId) → entry
+let DB_ENTRIES = [];  // pour affichage
+let PDF_TOOLS = [];
+let TLS_OUT = null;
+
+// ─── UTILS ───────────────────────────────────────────────────────────────────
+function log(m,t='i'){
+  const el=document.getElementById('logEl');
+  const n=new Date();
+  const ts=[n.getHours(),n.getMinutes(),n.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
+  el.insertAdjacentHTML('beforeend',`<div class="ll"><span class="lt">${ts}</span><span class="l${t}">${m}</span></div>`);
+  el.scrollTop=el.scrollHeight;
+}
+function setP(v){document.getElementById('prog').style.width=v+'%';}
+function badge(id,txt){const e=document.getElementById(id);e.textContent=txt;e.style.display='inline-block';}
+function checkRdy(){document.getElementById('genBtn').disabled=!(PDF_TOOLS.length&&DB_ENTRIES.length);}
+function toggleDbg(){const b=document.getElementById('dbgBody'),a=document.getElementById('dbgA');b.classList.toggle('open');a.textContent=b.classList.contains('open')?'▲':'▼';}
+function ev(e,id){e.preventDefault();document.getElementById(id).classList.add('drag');}
+function rv(id){document.getElementById(id).classList.remove('drag');}
+function dp(e,t){e.preventDefault();rv(t==='db'?'dbC':'pdfC');const f=e.dataTransfer.files;if(t==='db')loadDB(f);else if(f[0])loadPDF(f[0]);}
+
+// ─── NORMALISATION ───────────────────────────────────────────────────────────
+// Clé de recherche: uppercase, trim, sans espaces
+// On garde tout — TOD4, 2CC4, AHS4, etc.
+function mkKey(r){
+  if(!r) return '';
+  r=r.trim().toUpperCase().replace(/\s+/g,'');
+  // Si composite avec __ → prendre première partie
+  r=r.split('__')[0];
+  return r;
+}
+
+// Score de similarité segment par segment [0-100]
+function segScore(a,b){
+  if(a===b) return 100;
+  const pa=a.split('-'), pb=b.split('-');
+  if(pa.length!==pb.length) return 0;
+  let s=0;
+  for(let i=0;i<pa.length;i++){
+    if(pa[i]===pb[i]){s+=100/pa.length;continue;}
+    // Strip leading zeros: "032"→"32", "001"→"1", "840"→"840"
+    const z=x=>x.replace(/^([A-Z]*)0*(\d+)$/,(m,p,n)=>p+parseInt(n,10));
+    if(z(pa[i])===z(pb[i])){s+=82/pa.length;}
+  }
+  return s;
+}
+
+// ─── FIND MATCH ──────────────────────────────────────────────────────────────
+// Cherche ref PDF dans:
+// 1. Tool ID exact (DB[key])
+// 2. Tool ID avec score ≥ 85
+// 3. GageCompId, Apt ID, SOR ID
+function findMatch(ref){
+  const k=mkKey(ref);
+  if(!k) return null;
+
+  // 1. Exact sur Tool ID
+  if(DB[k]) return {entry:DB[k], how:'Tool ID exact', matchedKey:k};
+
+  // 2. Score sur Tool ID
+  let best=null, bestSc=0, bestKey='';
+  for(const [dbK,entry] of Object.entries(DB)){
+    const sc=segScore(k, dbK);
+    if(sc>bestSc){bestSc=sc;best=entry;bestKey=dbK;}
+  }
+  if(bestSc>=85) return {entry:best, how:`Tool ID ~${Math.round(bestSc)}%`, matchedKey:bestKey};
+
+  // 3. GageCompId / Apt / SOR (cherche dans tous les entries)
+  for(const entry of DB_ENTRIES){
+    // GageCompId
+    const gk=mkKey(entry.gageId);
+    if(gk&&(gk===k||segScore(k,gk)>=85))
+      return {entry, how:'GageCompId', matchedKey:entry.gageId};
+    // Apt IDs
+    for(const apt of entry.aptIds){
+      const ak=mkKey(apt);
+      if(ak&&(ak===k||segScore(k,ak)>=85))
+        return {entry, how:'Apt ID', matchedKey:apt};
+    }
+  }
+
+  return null;
+}
+
+// ─── LOAD TLS DATABASE ───────────────────────────────────────────────────────
+async function loadDB(files){
+  if(!files.length) return;
+  DB={};DB_ENTRIES=[];
+  log(`Chargement ${files.length} TLS...`);
+  let total=0;
+
+  for(const f of files){
+    try{
+      const txt=await f.text();
+      const xmlDoc=new DOMParser().parseFromString(txt,'application/xml');
+      const tools=xmlDoc.querySelectorAll('Tool');
+
+      tools.forEach(tool=>{
+        // Tool ID: dans NMVTUN c'est le code ref (ex: "2CC4-D00-032")
+        const toolId=tool.getAttribute('ID')||'';
+        const desc=tool.querySelector('Description')?.textContent?.trim()||'';
+        const gageId=tool.querySelector('GageCompId')?.textContent?.trim()||'';
+        const xmlStr=new XMLSerializer().serializeToString(tool);
+
+        // Apt IDs
+        const aptIds=[];
+        tool.querySelectorAll('Apt').forEach(apt=>{
+          const v=apt.getAttribute('ID');
+          if(v&&v.trim()&&!['Foret','Fraise','Taraud'].includes(v.trim()))
+            aptIds.push(v.trim());
+        });
+
+        // SOR IDs
+        const sorIds=[];
+        tool.querySelectorAll('SOR').forEach(sor=>{
+          const v=sor.getAttribute('ID');
+          if(v&&v.trim()) sorIds.push(v.trim());
+        });
+
+        const entry={toolId, xmlStr, gageId, aptIds, sorIds, desc, source:f.name};
+        DB_ENTRIES.push(entry);
+
+        // ── Index principal: Tool ID lui-même
+        const k=mkKey(toolId);
+        if(k) DB[k]=entry;
+
+        // ── Index secondaire: toutes les autres refs
+        // GageCompId et ses parties
+        [gageId, ...gageId.split('__')].forEach(r=>{
+          const rk=mkKey(r);
+          if(rk&&rk.length>3&&!DB[rk]) DB[rk]=entry;
+        });
+
+        // Apt IDs et leurs parties
+        aptIds.forEach(apt=>{
+          [apt, ...apt.split('__')].forEach(r=>{
+            const rk=mkKey(r);
+            if(rk&&rk.length>3&&!DB[rk]) DB[rk]=entry;
+          });
+        });
+
+        total++;
+      });
+
+      log(`✓ ${f.name} → ${tools.length} outils`,'o');
+    }catch(e){log(`✗ ${f.name}: ${e.message}`,'e');}
+  }
+
+  const kc=Object.keys(DB).length;
+  badge('dbBadge',`${total} outils`);
+  document.getElementById('dbC').classList.add('done');
+  document.getElementById('sD').textContent=total;
+  document.getElementById('dbCnt').textContent=`${total} outils`;
+  renderDB();checkRdy();
+  log(`Base: ${total} outils · ${kc} clés indexées`,'o');
+}
+
+function renderDB(){
+  const el=document.getElementById('dbList');
+  el.innerHTML=DB_ENTRIES.slice(0,120).map(e=>`
+    <div class="dbi">
+      <div class="dbi-id">${e.toolId}</div>
+      <div class="dbi-info">
+        <div class="dbi-ref">${e.gageId||e.aptIds[0]||e.desc.substring(0,40)||'—'}</div>
+      </div>
+      <div class="dbi-src">${e.source.replace('.tls','').substring(0,10)}</div>
+    </div>`).join('')+
+  (DB_ENTRIES.length>120?`<div class="empty" style="padding:8px;font-size:10px">+${DB_ENTRIES.length-120} autres</div>`:'');
+}
+
+// ─── LOAD PDF ────────────────────────────────────────────────────────────────
+async function loadPDF(file){
+  if(!file) return;
+  log(`Lecture PDF: ${file.name}`);
+  badge('pdfBadge','Analyse...');
+  document.getElementById('pdfC').classList.add('done');
+  setP(10);
+  try{
+    const buf=await file.arrayBuffer();
+    const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+    let allItems=[];
+    for(let p=1;p<=pdf.numPages;p++){
+      const page=await pdf.getPage(p);
+      const vp=page.getViewport({scale:1});
+      const ct=await page.getTextContent();
+      ct.items.forEach(it=>{
+        allItems.push({str:it.str,x:Math.round(it.transform[4]),y:Math.round(vp.height-it.transform[5]),page:p});
+      });
+    }
+    // Grouper par Y (tolérance 4px) → lignes
+    allItems.sort((a,b)=>a.page-b.page||a.y-b.y||a.x-b.x);
+    const lines=[];
+    let cy=-9999,cl=[];
+    for(const it of allItems){
+      if(Math.abs(it.y-cy)>4){
+        if(cl.length) lines.push(cl.sort((a,b)=>a.x-b.x).map(i=>i.str).join(' ').trim());
+        cl=[it];cy=it.y;
+      } else cl.push(it);
+    }
+    if(cl.length) lines.push(cl.sort((a,b)=>a.x-b.x).map(i=>i.str).join(' ').trim());
+    const L=lines.filter(Boolean);
+    const fullText=L.join('\n');
+    document.getElementById('dbgBody').textContent=fullText.substring(0,6000);
+    setP(50);
+    PDF_TOOLS=parseFiche(fullText,L);
+    setP(90);
+    log(`✓ ${PDF_TOOLS.length} outils extraits`,'o');
+    PDF_TOOLS.forEach(t=>log(`  T${t.tNum} → ${t.ref}`,'i'));
+    if(!PDF_TOOLS.length){
+      log('⚠ 0 outils — voir Debug ci-dessous','w');
+      document.getElementById('dbgBody').classList.add('open');
+      document.getElementById('dbgA').textContent='▲';
+    }
+    badge('pdfBadge',`${PDF_TOOLS.length} outils`);
+    document.getElementById('sT').textContent=PDF_TOOLS.length;
+    document.getElementById('pdfCnt').textContent=PDF_TOOLS.length+' outils';
+    renderPDF('p');checkRdy();
+    setP(100);setTimeout(()=>setP(0),600);
+  }catch(e){
+    log(`✗ ${e.message}`,'e');badge('pdfBadge','Erreur');setP(0);console.error(e);
+  }
+}
+
+// ─── PARSE FICHE OUTILS ──────────────────────────────────────────────────────
+function parseFiche(text,lines){
+  const tools=[];
+  // Ref pattern: commence par lettre OU chiffre, segments séparés par tiret
+  // Ex: TOD4-032-001, 2CC4-D00-025, FAL4-C00-001, FCA4-840-001, AHS4-I00-001
+  const REFP='[A-Z0-9][A-Z0-9]{1,7}-[A-Z0-9]{2,8}(?:-[A-Z0-9]{2,8})?';
+
+  // Méthode A: "T 9XX Outil REF"
+  const patA=new RegExp(`T\\s{0,5}(9\\d{2})\\s+Outil\\s+(${REFP})`,'gi');
+  let m;
+  while((m=patA.exec(text))!==null){
+    const tNum=m[1], ref=m[2].trim().toUpperCase();
+    if(tools.find(t=>t.tNum===tNum)) continue;
+    const blk=text.substring(m.index,Math.min(text.length,m.index+700));
+    tools.push({tNum,ref,desc:getDesc(text,m.index),
+      D:xn(blk,/\bD\s*[:\s]\s*([\d,\.]+)/),R:xn(blk,/\bR\s*[:\s]\s*([\d,\.]+)/),
+      LU:xn(blk,/\bLU\s*[:\s]\s*([\d,\.]+)/),LC:xn(blk,/\bLC\s*[:\s]\s*([\d,\.]+)/)});
+  }
+
+  // Méthode B: ligne par ligne
+  if(!tools.length){
+    log('Méthode A→0, essai B','w');
+    for(let i=0;i<lines.length;i++){
+      const l=lines[i];
+      const tM=l.match(/\bT\s*(9\d{2})\b/);
+      if(!tM) continue;
+      const tNum=tM[1];
+      if(tools.find(t=>t.tNum===tNum)) continue;
+      const win=lines.slice(i,i+6).join(' ');
+      const oM=win.match(new RegExp(`Outil\\s+(${REFP})`,'i'));
+      if(!oM) continue;
+      const ref=oM[1].trim().toUpperCase();
+      const blk=lines.slice(i,i+20).join(' ');
+      tools.push({tNum,ref,
+        desc:(()=>{for(let j=Math.max(0,i-6);j<i;j++)if(lines[j].includes('ASSEMB'))return lines[j];return '';})(),
+        D:xn(blk,/D\s*[:\s]\s*([\d,\.]+)/),R:xn(blk,/R\s*[:\s]\s*([\d,\.]+)/),
+        LU:xn(blk,/LU\s*[:\s]\s*([\d,\.]+)/),LC:xn(blk,/LC\s*[:\s]\s*([\d,\.]+)/)});
+      log(`  B→ T${tNum}: ${ref}`,'w');
+    }
+  }
+  return tools;
+}
+function getDesc(text,idx){
+  const b=text.substring(Math.max(0,idx-500),idx);
+  const m=b.match(/ASSEMB[^\n]*/gi);
+  return m?m[m.length-1].trim():'';
+}
+function xn(t,re){const m=t.match(re);return m?parseFloat(m[1].replace(',','.'))||0:0;}
+
+// ─── RENDER PDF ──────────────────────────────────────────────────────────────
+function renderPDF(phase){
+  const el=document.getElementById('pdfList');
+  if(!PDF_TOOLS.length){el.innerHTML='<div class="empty"><span>📄</span>Aucun outil</div>';return;}
+  el.innerHTML=PDF_TOOLS.map(t=>{
+    const res=phase==='done'?findMatch(t.ref):null;
+    const st=phase==='done'?(res?'ok':'er'):'';
+    const d=phase==='done'?(res?'ok':'er'):'p';
+    const mInfo=res
+      ?`<div class="tmatch">✓ Tool ID: <b>${res.entry.toolId}</b> <span class="dim">(${res.how})</span></div>`
+      :'';
+    return `<div class="tc ${st}" id="tc-${t.tNum}">
+      <div class="tnum">T${t.tNum}</div>
+      <div class="ti">
+        <div class="tref">${t.ref}</div>
+        ${mInfo}
+        <div class="tdesc">${t.desc||'—'}</div>
+        <div class="tdims">Ø${t.D} R${t.R} LU=${t.LU} LC=${t.LC}</div>
+      </div>
+      <div class="dot ${d}" id="dot-${t.tNum}"></div>
+    </div>`;
+  }).join('');
+}
+
+// ─── GENERATE ────────────────────────────────────────────────────────────────
+async function generate(){
+  if(!PDF_TOOLS.length) return;
+  const btn=document.getElementById('genBtn');
+  btn.disabled=true;btn.innerHTML='<span class="spin"></span> Traitement...';
+  log('Matching...');
+  let matched=0,missing=0;
+  const list=[];
+
+  for(let i=0;i<PDF_TOOLS.length;i++){
+    const t=PDF_TOOLS[i];
+    setP(((i+1)/PDF_TOOLS.length)*90);
+    await new Promise(r=>setTimeout(r,15));
+    const res=findMatch(t.ref);
+    const card=document.getElementById(`tc-${t.tNum}`);
+    const dot=document.getElementById(`dot-${t.tNum}`);
+
+    if(res){
+      matched++;list.push({tool:t,entry:res.entry,how:res.how});
+      log(`T${t.tNum} → ${t.ref} ✓ Tool ID:${res.entry.toolId} [${res.how}]`,'o');
+      if(card){
+        card.className='tc ok';dot.className='dot ok';
+        const ti=card.querySelector('.ti');
+        let mi=card.querySelector('.tmatch');
+        if(!mi){mi=document.createElement('div');mi.className='tmatch';ti.insertBefore(mi,ti.children[1]);}
+        mi.innerHTML=`✓ Tool ID: <b>${res.entry.toolId}</b> <span class="dim">(${res.how})</span>`;
+      }
+    }else{
+      missing++;
+      log(`T${t.tNum} → ${t.ref} ✗ non trouvé`,'e');
+      if(card){card.className='tc er';dot.className='dot er';}
+    }
+  }
+
+  document.getElementById('sM').textContent=matched;
+  document.getElementById('sX').textContent=missing;
+  TLS_OUT=buildTLS(list);
+  setP(100);setTimeout(()=>setP(0),600);
+  log(`Terminé: ${matched}/${PDF_TOOLS.length} trouvés · ${missing} manquants`,matched>0?'o':'w');
+  btn.innerHTML='⚡ Générer TLS';btn.disabled=false;
+  document.getElementById('dlBtn').disabled=false;
+}
+
+// ─── BUILD TLS ───────────────────────────────────────────────────────────────
+// L'ID dans le TLS généré = Tool ID original de la base (ex: "2CC4-D00-032")
+function buildTLS(list){
+  let xml='';
+  list.forEach(({tool,entry})=>{
+    const doc=new DOMParser().parseFromString(`<root>${entry.xmlStr}</root>`,'application/xml');
+    const el=doc.querySelector('Tool');
+    if(el){
+      // Tool ID original conservé (ex: "2CC4-D00-032")
+      const descEl=el.querySelector('Description');
+      if(descEl&&tool.desc) descEl.textContent=tool.desc;
+      xml+='    '+new XMLSerializer().serializeToString(el).replace(/ xmlns[^"]*"[^"]*"/g,'')+'\n';
+    }
+  });
+  return`<?xml version="1.0"?>
+<CGTechToolLibrary Version="9.4">
+  <Information>
+    <InfoUserName>FGAT-Generator</InfoUserName>
+    <InfoDateTime>${new Date().toString()}</InfoDateTime>
+    <InfoVericutVersion>9.4</InfoVericutVersion>
+    <InfoLibraryDate>${new Date().toLocaleDateString('fr-FR')}</InfoLibraryDate>
+    <InfoCustomerName>Figeac Aero Tunisia</InfoCustomerName>
+  </Information>
+  <Tools>
+${xml}  </Tools>
+  <CSystems/>
+</CGTechToolLibrary>`;
+}
+
+function dlTLS(){
+  if(!TLS_OUT) return;
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([TLS_OUT],{type:'application/xml'}));
+  a.download=`tools_${new Date().toISOString().slice(0,10)}.tls`;
+  a.click();
+  log('✓ TLS téléchargé','o');
+}
+</script>
+</body>
+</html>
